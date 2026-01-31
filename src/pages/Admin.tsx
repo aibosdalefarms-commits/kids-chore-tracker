@@ -1,18 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from '../context/AdminContext';
 import { useFamily } from '../context/FamilyContext';
 import { Button } from '../components/ui/Button';
 import { ChoreLibrary } from '../components/admin/ChoreLibrary';
 import { ChoreAssignments } from '../components/admin/ChoreAssignments';
+import { VerificationCenter } from '../components/admin/VerificationCenter';
+import { ChildrenManager } from '../components/admin/ChildrenManager';
+import { dataService } from '../services/data';
 
 type AdminSection = 'dashboard' | 'chores' | 'assignments' | 'children' | 'verification' | 'time-periods' | 'store' | 'rewards' | 'settings';
 
 export function Admin() {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAdmin();
-  const { family, children, chores, assignments } = useFamily();
+  const { family, children, chores } = useFamily();
   const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const loadPendingCount = async () => {
+      const pending = await dataService.getPendingCompletions();
+      setPendingCount(pending.length);
+    };
+    loadPendingCount();
+  }, [activeSection]);
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
@@ -26,10 +38,10 @@ export function Admin() {
   };
 
   const sections = [
+    { id: 'verification' as const, title: 'Verification', icon: '✅', desc: 'Verify completed chores', badge: pendingCount },
     { id: 'chores' as const, title: 'Chore Library', icon: '📋', desc: 'Create and edit chores' },
     { id: 'assignments' as const, title: 'Assignments', icon: '📅', desc: 'Assign chores to children' },
-    { id: 'verification' as const, title: 'Verification', icon: '✅', desc: 'Verify completed chores', disabled: true },
-    { id: 'children' as const, title: 'Children', icon: '👦', desc: 'Manage children and avatars', disabled: true },
+    { id: 'children' as const, title: 'Children', icon: '👦', desc: 'Manage children and avatars' },
     { id: 'time-periods' as const, title: 'Time Periods', icon: '⏰', desc: 'Configure daily schedules', disabled: true },
     { id: 'store' as const, title: 'Avatar Store', icon: '🛍️', desc: 'Manage store and prices', disabled: true },
     { id: 'rewards' as const, title: 'Family Rewards', icon: '🎁', desc: 'Set up family rewards', disabled: true },
@@ -42,6 +54,10 @@ export function Admin() {
         return <ChoreLibrary />;
       case 'assignments':
         return <ChoreAssignments />;
+      case 'verification':
+        return <VerificationCenter />;
+      case 'children':
+        return <ChildrenManager />;
       default:
         return (
           <>
@@ -60,8 +76,8 @@ export function Admin() {
                 <div className="text-gray-500 text-sm">Family Points</div>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-md">
-                <div className="text-3xl font-bold text-purple-600">{assignments.length}</div>
-                <div className="text-gray-500 text-sm">Assignments</div>
+                <div className="text-3xl font-bold text-purple-600">{pendingCount}</div>
+                <div className="text-gray-500 text-sm">Pending Verifications</div>
               </div>
             </div>
 
@@ -72,12 +88,17 @@ export function Admin() {
                   key={section.id}
                   onClick={() => !section.disabled && setActiveSection(section.id)}
                   disabled={section.disabled}
-                  className={`bg-white rounded-xl p-6 shadow-md text-left transition-all ${
+                  className={`bg-white rounded-xl p-6 shadow-md text-left transition-all relative ${
                     section.disabled
                       ? 'opacity-50 cursor-not-allowed'
                       : 'hover:shadow-lg hover:scale-[1.02]'
                   }`}
                 >
+                  {section.badge !== undefined && section.badge > 0 && (
+                    <span className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                      {section.badge}
+                    </span>
+                  )}
                   <div className="text-3xl mb-2">{section.icon}</div>
                   <h3 className="font-semibold text-gray-800">{section.title}</h3>
                   <p className="text-sm text-gray-500">{section.desc}</p>
