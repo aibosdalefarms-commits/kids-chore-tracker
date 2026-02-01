@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Family, Child, Chore, ChoreAssignment, TimePeriod } from '../types';
+import type { Family, Child, Chore, ChoreAssignment, TimePeriod, FamilyReward } from '../types';
 import { dataService } from '../services/data';
 
 interface FamilyContextType {
@@ -11,6 +11,7 @@ interface FamilyContextType {
   chores: Chore[];
   assignments: ChoreAssignment[];
   timePeriods: TimePeriod[];
+  rewards: FamilyReward[];
 
   // Actions
   refreshData: () => Promise<void>;
@@ -25,6 +26,9 @@ interface FamilyContextType {
   updateAssignment: (assignmentId: string, updates: Partial<ChoreAssignment>) => Promise<void>;
   removeAssignment: (assignmentId: string) => Promise<void>;
   saveTimePeriods: (periods: TimePeriod[]) => Promise<void>;
+  addReward: (reward: FamilyReward) => Promise<void>;
+  updateReward: (rewardId: string, updates: Partial<FamilyReward>) => Promise<void>;
+  removeReward: (rewardId: string) => Promise<void>;
   initializeFamily: (family: Family, periods: TimePeriod[]) => Promise<void>;
 }
 
@@ -38,16 +42,18 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
   const [chores, setChores] = useState<Chore[]>([]);
   const [assignments, setAssignments] = useState<ChoreAssignment[]>([]);
   const [timePeriods, setTimePeriods] = useState<TimePeriod[]>([]);
+  const [rewards, setRewards] = useState<FamilyReward[]>([]);
 
   const refreshData = useCallback(async () => {
     try {
-      const [appState, familyData, childrenData, choresData, assignmentsData, periodsData] = await Promise.all([
+      const [appState, familyData, childrenData, choresData, assignmentsData, periodsData, rewardsData] = await Promise.all([
         dataService.getAppState(),
         dataService.getFamily(),
         dataService.getChildren(),
         dataService.getChores(),
         dataService.getAssignments(),
         dataService.getTimePeriods(),
+        dataService.getFamilyRewards(),
       ]);
 
       setIsInitialized(appState.initialized);
@@ -56,6 +62,7 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
       setChores(choresData);
       setAssignments(assignmentsData);
       setTimePeriods(periodsData);
+      setRewards(rewardsData);
     } catch (error) {
       console.error('Error loading family data:', error);
     } finally {
@@ -134,6 +141,21 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
     setTimePeriods(periods);
   };
 
+  const addReward = async (reward: FamilyReward) => {
+    await dataService.saveFamilyReward(reward);
+    setRewards(prev => [...prev, reward]);
+  };
+
+  const updateReward = async (rewardId: string, updates: Partial<FamilyReward>) => {
+    await dataService.updateFamilyReward(rewardId, updates);
+    setRewards(prev => prev.map(r => r.rewardId === rewardId ? { ...r, ...updates } : r));
+  };
+
+  const removeReward = async (rewardId: string) => {
+    await dataService.deleteFamilyReward(rewardId);
+    setRewards(prev => prev.filter(r => r.rewardId !== rewardId));
+  };
+
   return (
     <FamilyContext.Provider
       value={{
@@ -144,6 +166,7 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
         chores,
         assignments,
         timePeriods,
+        rewards,
         refreshData,
         updateFamily,
         addChild,
@@ -156,6 +179,9 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
         updateAssignment,
         removeAssignment,
         saveTimePeriods,
+        addReward,
+        updateReward,
+        removeReward,
         initializeFamily,
       }}
     >
