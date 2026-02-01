@@ -7,6 +7,8 @@ import { ChoreLibrary } from '../components/admin/ChoreLibrary';
 import { ChoreAssignments } from '../components/admin/ChoreAssignments';
 import { VerificationCenter } from '../components/admin/VerificationCenter';
 import { ChildrenManager } from '../components/admin/ChildrenManager';
+import { TimePeriodSettings } from '../components/admin/TimePeriodSettings';
+import { FamilyRewards } from '../components/admin/FamilyRewards';
 import { dataService } from '../services/data';
 
 type AdminSection = 'dashboard' | 'chores' | 'assignments' | 'children' | 'verification' | 'time-periods' | 'store' | 'rewards' | 'settings';
@@ -42,9 +44,9 @@ export function Admin() {
     { id: 'chores' as const, title: 'Chore Library', icon: '📋', desc: 'Create and edit chores' },
     { id: 'assignments' as const, title: 'Assignments', icon: '📅', desc: 'Assign chores to children' },
     { id: 'children' as const, title: 'Children', icon: '👦', desc: 'Manage children and avatars' },
-    { id: 'time-periods' as const, title: 'Time Periods', icon: '⏰', desc: 'Configure daily schedules', disabled: true },
+    { id: 'time-periods' as const, title: 'Time Periods', icon: '⏰', desc: 'Configure daily schedules' },
     { id: 'store' as const, title: 'Avatar Store', icon: '🛍️', desc: 'Manage store and prices', disabled: true },
-    { id: 'rewards' as const, title: 'Family Rewards', icon: '🎁', desc: 'Set up family rewards', disabled: true },
+    { id: 'rewards' as const, title: 'Family Rewards', icon: '🎁', desc: 'Set up family rewards' },
     { id: 'settings' as const, title: 'Settings', icon: '⚙️', desc: 'App settings and data', disabled: true },
   ];
 
@@ -58,6 +60,10 @@ export function Admin() {
         return <VerificationCenter />;
       case 'children':
         return <ChildrenManager />;
+      case 'time-periods':
+        return <TimePeriodSettings />;
+      case 'rewards':
+        return <FamilyRewards />;
       default:
         return (
           <>
