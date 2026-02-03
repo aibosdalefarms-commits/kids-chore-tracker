@@ -10,6 +10,7 @@ import { ChildrenManager } from '../components/admin/ChildrenManager';
 import { TimePeriodSettings } from '../components/admin/TimePeriodSettings';
 import { FamilyRewards } from '../components/admin/FamilyRewards';
 import { AvatarStoreAdmin } from '../components/admin/AvatarStoreAdmin';
+import { Settings } from '../components/admin/Settings';
 import { dataService } from '../services/data';
 
 type AdminSection = 'dashboard' | 'chores' | 'assignments' | 'children' | 'verification' | 'time-periods' | 'store' | 'rewards' | 'settings';
@@ -48,7 +49,7 @@ export function Admin() {
     { id: 'time-periods' as const, title: 'Time Periods', icon: '⏰', desc: 'Configure daily schedules' },
     { id: 'store' as const, title: 'Avatar Store', icon: '🛍️', desc: 'Manage store and prices' },
     { id: 'rewards' as const, title: 'Family Rewards', icon: '🎁', desc: 'Set up family rewards' },
-    { id: 'settings' as const, title: 'Settings', icon: '⚙️', desc: 'App settings and data', disabled: true },
+    { id: 'settings' as const, title: 'Settings', icon: '⚙️', desc: 'App settings and data' },
   ];
 
   const renderContent = () => {
@@ -67,6 +68,8 @@ export function Admin() {
         return <FamilyRewards />;
       case 'store':
         return <AvatarStoreAdmin />;
+      case 'settings':
+        return <Settings />;
       default:
         return (
           <>
@@ -95,13 +98,8 @@ export function Admin() {
               {sections.map(section => (
                 <button
                   key={section.id}
-                  onClick={() => !section.disabled && setActiveSection(section.id)}
-                  disabled={section.disabled}
-                  className={`bg-white rounded-xl p-6 shadow-md text-left transition-all relative ${
-                    section.disabled
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:shadow-lg hover:scale-[1.02]'
-                  }`}
+                  onClick={() => setActiveSection(section.id)}
+                  className="bg-white rounded-xl p-6 shadow-md text-left transition-all relative hover:shadow-lg hover:scale-[1.02]"
                 >
                   {section.badge !== undefined && section.badge > 0 && (
                     <span className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
@@ -111,9 +109,6 @@ export function Admin() {
                   <div className="text-3xl mb-2">{section.icon}</div>
                   <h3 className="font-semibold text-gray-800">{section.title}</h3>
                   <p className="text-sm text-gray-500">{section.desc}</p>
-                  {section.disabled && (
-                    <span className="text-xs text-gray-400 mt-2 block">Coming soon</span>
-                  )}
                 </button>
               ))}
             </div>
