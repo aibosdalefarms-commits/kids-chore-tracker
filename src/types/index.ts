@@ -122,6 +122,23 @@ export interface FamilyReward {
   createdAt: string;
 }
 
+// Side Quest - one-off tasks assigned to a child
+export type SideQuestStatus = 'active' | 'pending_verification' | 'completed';
+
+export interface SideQuest {
+  questId: string;
+  familyId: string;
+  childId: string;
+  name: string;
+  emoji: string;
+  description?: string;
+  pointValue: number;
+  status: SideQuestStatus;
+  completedAt: string | null;
+  verifiedAt: string | null;
+  createdAt: string;
+}
+
 // Purchased accessory record
 export interface PurchasedAccessory {
   purchaseId: string;

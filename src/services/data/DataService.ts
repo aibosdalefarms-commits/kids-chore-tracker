@@ -6,6 +6,7 @@ import type {
   Completion,
   TimePeriod,
   FamilyReward,
+  SideQuest,
   StoreSchedule,
   PurchasedAccessory,
   AppState,
@@ -69,6 +70,14 @@ export interface DataService {
   saveFamilyReward(reward: FamilyReward): Promise<void>;
   updateFamilyReward(rewardId: string, updates: Partial<FamilyReward>): Promise<void>;
   deleteFamilyReward(rewardId: string): Promise<void>;
+
+  // Side Quests
+  getSideQuests(): Promise<SideQuest[]>;
+  getSideQuestsByChild(childId: string): Promise<SideQuest[]>;
+  getPendingSideQuests(): Promise<SideQuest[]>;
+  saveSideQuest(quest: SideQuest): Promise<void>;
+  updateSideQuest(questId: string, updates: Partial<SideQuest>): Promise<void>;
+  deleteSideQuest(questId: string): Promise<void>;
 
   // Store Schedule
   getStoreSchedule(): Promise<StoreSchedule | null>;

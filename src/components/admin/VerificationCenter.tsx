@@ -3,21 +3,27 @@ import { useFamily } from '../../context/FamilyContext';
 import { Button } from '../ui/Button';
 import { AvatarDisplay } from '../avatar/AvatarDisplay';
 import { dataService } from '../../services/data';
-import type { Completion, Child, Chore } from '../../types';
+import type { Completion, Child, Chore, SideQuest } from '../../types';
 
 interface CompletionWithDetails extends Completion {
   child: Child;
   chore: Chore;
 }
 
+interface SideQuestWithChild extends SideQuest {
+  child: Child;
+}
+
 export function VerificationCenter() {
-  const { children, chores, updateChild, updateFamily, family } = useFamily();
+  const { children, chores, updateChild, updateFamily, family, sideQuests, updateSideQuest } = useFamily();
   const [completions, setCompletions] = useState<CompletionWithDetails[]>([]);
+  const [pendingSideQuests, setPendingSideQuests] = useState<SideQuestWithChild[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadPendingCompletions();
-  }, []);
+    loadPendingSideQuests();
+  }, [sideQuests]);
 
   const loadPendingCompletions = async () => {
     const pending = await dataService.getPendingCompletions();
@@ -34,6 +40,20 @@ export function VerificationCenter() {
 
     setCompletions(withDetails);
     setIsLoading(false);
+  };
+
+  const loadPendingSideQuests = () => {
+    const pending = sideQuests
+      .filter(q => q.status === 'pending_verification')
+      .map(quest => {
+        const child = children.find(c => c.childId === quest.childId);
+        if (!child) return null;
+        return { ...quest, child };
+      })
+      .filter((q): q is SideQuestWithChild => q !== null)
+      .sort((a, b) => new Date(b.completedAt || '').getTime() - new Date(a.completedAt || '').getTime());
+
+    setPendingSideQuests(pending);
   };
 
   const handleVerify = async (completion: CompletionWithDetails, adjustedPoints?: number) => {
@@ -76,6 +96,42 @@ export function VerificationCenter() {
     setCompletions(prev => prev.filter(c => c.completionId !== completionId));
   };
 
+  const handleVerifySideQuest = async (quest: SideQuestWithChild, adjustedPoints?: number) => {
+    const pointsToAward = adjustedPoints ?? quest.pointValue;
+
+    // Update side quest status
+    await updateSideQuest(quest.questId, {
+      status: 'completed',
+      verifiedAt: new Date().toISOString(),
+    });
+
+    // Award points to child
+    await updateChild(quest.childId, {
+      individualPoints: quest.child.individualPoints + pointsToAward,
+      totalPointsEarned: quest.child.totalPointsEarned + pointsToAward,
+    });
+
+    // Award points to family total
+    if (family) {
+      await updateFamily({
+        familyPoints: family.familyPoints + pointsToAward,
+      });
+    }
+
+    // Remove from list
+    setPendingSideQuests(prev => prev.filter(q => q.questId !== quest.questId));
+  };
+
+  const handleRejectSideQuest = async (questId: string) => {
+    if (!confirm('Reject this side quest? It will return to active status.')) return;
+
+    await updateSideQuest(questId, {
+      status: 'active',
+      completedAt: null,
+    });
+    setPendingSideQuests(prev => prev.filter(q => q.questId !== questId));
+  };
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -111,6 +167,8 @@ export function VerificationCenter() {
     );
   }
 
+  const totalPending = completions.length + pendingSideQuests.length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -118,7 +176,12 @@ export function VerificationCenter() {
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Verification Center</h2>
           <p className="text-gray-500">
-            {completions.length} pending verification{completions.length !== 1 ? 's' : ''}
+            {totalPending} pending verification{totalPending !== 1 ? 's' : ''}
+            {pendingSideQuests.length > 0 && (
+              <span className="ml-1 text-purple-600">
+                ({pendingSideQuests.length} side quest{pendingSideQuests.length !== 1 ? 's' : ''})
+              </span>
+            )}
           </p>
         </div>
         {completions.length > 0 && (
@@ -126,7 +189,7 @@ export function VerificationCenter() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            Verify All ({completions.length})
+            Verify All Chores ({completions.length})
           </Button>
         )}
       </div>
@@ -200,11 +263,80 @@ export function VerificationCenter() {
             </div>
           ))}
         </div>
-      ) : (
+      ) : completions.length === 0 && pendingSideQuests.length === 0 && (
         <div className="text-center py-12 bg-white rounded-xl shadow-sm">
           <div className="text-5xl mb-4">✅</div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">All caught up!</h3>
           <p className="text-gray-500">No chores waiting for verification.</p>
+        </div>
+      )}
+
+      {/* Pending Side Quests */}
+      {pendingSideQuests.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-purple-100 overflow-hidden">
+          <div className="flex items-center gap-3 p-4 bg-purple-50 border-b border-purple-100">
+            <span className="text-2xl">🎯</span>
+            <div className="flex-1">
+              <h3 className="font-semibold text-purple-800">Side Quests</h3>
+              <p className="text-sm text-purple-600">
+                {pendingSideQuests.length} quest{pendingSideQuests.length !== 1 ? 's' : ''} to verify
+              </p>
+            </div>
+          </div>
+
+          <div className="divide-y divide-purple-100">
+            {pendingSideQuests.map(quest => (
+              <div key={quest.questId} className="p-4">
+                <div className="flex items-center gap-4">
+                  {/* Child Avatar */}
+                  <AvatarDisplay config={quest.child.avatarConfig} size="sm" />
+
+                  {/* Quest Info */}
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="text-2xl">{quest.emoji}</span>
+                    <div>
+                      <p className="font-medium text-gray-800">{quest.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {quest.child.name} • {quest.completedAt && formatDate(quest.completedAt)}
+                      </p>
+                      {quest.description && (
+                        <p className="text-sm text-gray-400 mt-1">{quest.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Points */}
+                  <div className="text-center">
+                    <p className="text-lg font-semibold text-purple-600">+{quest.pointValue}</p>
+                    <p className="text-xs text-gray-500">points</p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => handleVerifySideQuest(quest)}
+                      className="gap-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Verify
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRejectSideQuest(quest.questId)}
+                    >
+                      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

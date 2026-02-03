@@ -7,13 +7,13 @@ import { Button } from '../components/ui/Button';
 import { dataService } from '../services/data';
 import { generateId } from '../utils/id';
 import { getCurrentDayOfWeek, getCurrentTimePeriod, getTodayDateString } from '../utils/time';
-import type { ChoreWithAssignment, Completion, TimePeriodId } from '../types';
+import type { ChoreWithAssignment, Completion, TimePeriodId, SideQuest } from '../types';
 import { TIME_PERIOD_NAMES } from '../types';
 
 export function ChildView() {
   const { childId } = useParams<{ childId: string }>();
   const navigate = useNavigate();
-  const { children, chores, assignments, timePeriods, family } = useFamily();
+  const { children, chores, assignments, timePeriods, family, sideQuests, updateSideQuest } = useFamily();
   const [completions, setCompletions] = useState<Completion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -84,6 +84,30 @@ export function ChildView() {
 
   const completedCount = currentChores.filter(c => c.completion).length;
   const allCurrentCompleted = currentChores.length > 0 && completedCount === currentChores.length;
+
+  // Get active side quests for this child
+  const childSideQuests = useMemo(() => {
+    if (!childId) return [];
+    return sideQuests.filter(q => q.childId === childId && q.status !== 'completed');
+  }, [sideQuests, childId]);
+
+  const handleToggleSideQuest = async (quest: SideQuest) => {
+    if (quest.status === 'active') {
+      // Mark as pending verification
+      await updateSideQuest(quest.questId, {
+        status: 'pending_verification',
+        completedAt: new Date().toISOString(),
+      });
+      // Fire confetti for completing a side quest
+      triggerConfetti();
+    } else if (quest.status === 'pending_verification') {
+      // Allow unchecking - back to active
+      await updateSideQuest(quest.questId, {
+        status: 'active',
+        completedAt: null,
+      });
+    }
+  };
 
   const handleToggleChore = async (item: ChoreWithAssignment) => {
     if (!childId || !family) return;
@@ -277,6 +301,64 @@ export function ChildView() {
               <p className="text-gray-500">Check back later or enjoy your break!</p>
             </>
           )}
+        </div>
+      )}
+
+      {/* Side Quests */}
+      {childSideQuests.length > 0 && (
+        <div className="mt-8">
+          <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <span>🎯</span> Side Quests
+          </h3>
+          <div className="space-y-3">
+            {childSideQuests.map(quest => (
+              <button
+                key={quest.questId}
+                onClick={() => handleToggleSideQuest(quest)}
+                className={`w-full flex items-center gap-4 p-5 rounded-2xl transition-all touch-target ${
+                  quest.status === 'pending_verification'
+                    ? 'bg-yellow-100 border-2 border-yellow-300'
+                    : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 hover:border-purple-300 shadow-sm'
+                }`}
+              >
+                {/* Checkbox */}
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                    quest.status === 'pending_verification'
+                      ? 'bg-yellow-500 text-white'
+                      : 'bg-purple-200'
+                  }`}
+                >
+                  {quest.status === 'pending_verification' && (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+
+                {/* Quest Info */}
+                <div className="flex-1 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{quest.emoji}</span>
+                    <span className={`text-lg font-medium ${quest.status === 'pending_verification' ? 'text-yellow-700' : 'text-gray-800'}`}>
+                      {quest.name}
+                    </span>
+                  </div>
+                  {quest.description && (
+                    <p className="text-sm text-gray-500 mt-1">{quest.description}</p>
+                  )}
+                  {quest.status === 'pending_verification' && (
+                    <p className="text-xs text-yellow-600 mt-1">Waiting for verification...</p>
+                  )}
+                </div>
+
+                {/* Points */}
+                <div className={`text-lg font-semibold ${quest.status === 'pending_verification' ? 'text-yellow-600' : 'text-purple-600'}`}>
+                  +{quest.pointValue}
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
