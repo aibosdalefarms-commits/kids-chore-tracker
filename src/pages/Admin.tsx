@@ -9,6 +9,7 @@ import { VerificationCenter } from '../components/admin/VerificationCenter';
 import { ChildrenManager } from '../components/admin/ChildrenManager';
 import { TimePeriodSettings } from '../components/admin/TimePeriodSettings';
 import { FamilyRewards } from '../components/admin/FamilyRewards';
+import { AvatarStoreAdmin } from '../components/admin/AvatarStoreAdmin';
 import { dataService } from '../services/data';
 
 type AdminSection = 'dashboard' | 'chores' | 'assignments' | 'children' | 'verification' | 'time-periods' | 'store' | 'rewards' | 'settings';
@@ -45,7 +46,7 @@ export function Admin() {
     { id: 'assignments' as const, title: 'Assignments', icon: '📅', desc: 'Assign chores to children' },
     { id: 'children' as const, title: 'Children', icon: '👦', desc: 'Manage children and avatars' },
     { id: 'time-periods' as const, title: 'Time Periods', icon: '⏰', desc: 'Configure daily schedules' },
-    { id: 'store' as const, title: 'Avatar Store', icon: '🛍️', desc: 'Manage store and prices', disabled: true },
+    { id: 'store' as const, title: 'Avatar Store', icon: '🛍️', desc: 'Manage store and prices' },
     { id: 'rewards' as const, title: 'Family Rewards', icon: '🎁', desc: 'Set up family rewards' },
     { id: 'settings' as const, title: 'Settings', icon: '⚙️', desc: 'App settings and data', disabled: true },
   ];
@@ -64,6 +65,8 @@ export function Admin() {
         return <TimePeriodSettings />;
       case 'rewards':
         return <FamilyRewards />;
+      case 'store':
+        return <AvatarStoreAdmin />;
       default:
         return (
           <>
