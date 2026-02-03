@@ -123,7 +123,7 @@ export class DiceBearProvider implements AvatarService {
           category: 'hair',
           avatarProperty: 'hairColor',
           avatarValue: color.value,
-          pointCost: 15,
+          pointCost: 150,
           available: true,
         });
       });
@@ -138,7 +138,7 @@ export class DiceBearProvider implements AvatarService {
           category: 'clothing',
           avatarProperty: 'clothingColor',
           avatarValue: color.value,
-          pointCost: 10,
+          pointCost: 100,
           available: true,
         });
       });
@@ -160,12 +160,12 @@ export class DiceBearProvider implements AvatarService {
 
   private getDefaultPrice(category: AccessoryCategory): number {
     switch (category) {
-      case 'eyewear': return 20;
-      case 'accessories': return 15;
-      case 'clothing': return 25;
-      case 'hair': return 30;
-      case 'footwear': return 20;
-      default: return 10;
+      case 'eyewear': return 200;
+      case 'accessories': return 150;
+      case 'clothing': return 250;
+      case 'hair': return 300;
+      case 'footwear': return 200;
+      default: return 100;
     }
   }
 
