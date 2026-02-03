@@ -12,14 +12,14 @@ export function ChoreLibrary() {
   const [editingChore, setEditingChore] = useState<Chore | null>(null);
   const [name, setName] = useState('');
   const [emoji, setEmoji] = useState('✨');
-  const [pointValue, setPointValue] = useState(10);
+  const [pointValue, setPointValue] = useState(5);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const openCreateModal = () => {
     setEditingChore(null);
     setName('');
     setEmoji('✨');
-    setPointValue(10);
+    setPointValue(5);
     setIsModalOpen(true);
   };
 
