@@ -32,8 +32,13 @@ export function Admin() {
   }, [activeSection]);
 
   // Redirect if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
   if (!isAuthenticated) {
-    navigate('/');
     return null;
   }
 
