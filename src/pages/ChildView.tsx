@@ -190,29 +190,25 @@ export function ChildView() {
         </Button>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(`/child/${childId}/store`)}
-            className="relative"
-          >
-            <AvatarDisplay config={child.avatarConfig} size="md" />
-            <span className="absolute -bottom-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-md">
-              🛍️
-            </span>
-          </button>
+          <AvatarDisplay config={child.avatarConfig} size="md" />
           <div className="text-right">
             <h1 className="text-xl font-bold text-gray-800">{child.name}</h1>
             <div className="flex items-center gap-2 text-sm">
-              <button
-                onClick={() => navigate(`/child/${childId}/store`)}
-                className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
-              >
+              <span className="text-indigo-600 font-medium">
                 ⭐ {child.individualPoints}
-              </button>
+              </span>
               {child.currentStreak > 0 && (
                 <span className="text-orange-500 font-medium">🔥 {child.currentStreak}</span>
               )}
             </div>
           </div>
+          <button
+            onClick={() => navigate(`/child/${childId}/store`)}
+            className="ml-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center gap-2 font-medium"
+          >
+            <span className="text-xl">🛍️</span>
+            <span>Store</span>
+          </button>
         </div>
       </header>
 
