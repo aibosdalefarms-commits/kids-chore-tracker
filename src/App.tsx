@@ -4,6 +4,7 @@ import { AdminProvider } from './context/AdminContext';
 import { useAutoReturn } from './hooks/useAutoReturn';
 import { Home } from './pages/Home';
 import { ChildView } from './pages/ChildView';
+import { AvatarStore } from './pages/AvatarStore';
 import { Admin } from './pages/Admin';
 import { Setup } from './pages/Setup';
 
@@ -38,6 +39,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/child/:childId" element={<ChildView />} />
+      <Route path="/child/:childId/store" element={<AvatarStore />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/setup" element={<Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />

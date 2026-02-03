@@ -166,11 +166,24 @@ export function ChildView() {
         </Button>
 
         <div className="flex items-center gap-3">
-          <AvatarDisplay config={child.avatarConfig} size="md" />
+          <button
+            onClick={() => navigate(`/child/${childId}/store`)}
+            className="relative"
+          >
+            <AvatarDisplay config={child.avatarConfig} size="md" />
+            <span className="absolute -bottom-1 -right-1 bg-purple-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+              🛍️
+            </span>
+          </button>
           <div className="text-right">
             <h1 className="text-xl font-bold text-gray-800">{child.name}</h1>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-indigo-600 font-medium">⭐ {child.individualPoints}</span>
+              <button
+                onClick={() => navigate(`/child/${childId}/store`)}
+                className="text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
+              >
+                ⭐ {child.individualPoints}
+              </button>
               {child.currentStreak > 0 && (
                 <span className="text-orange-500 font-medium">🔥 {child.currentStreak}</span>
               )}
