@@ -6,6 +6,7 @@ import type {
   Completion,
   TimePeriod,
   FamilyReward,
+  SideQuest,
   StoreSchedule,
   PurchasedAccessory,
   AppState,
@@ -23,6 +24,7 @@ const KEYS = {
   COMPLETIONS: 'chore_completions',
   TIME_PERIODS: 'chore_time_periods',
   FAMILY_REWARDS: 'chore_family_rewards',
+  SIDE_QUESTS: 'chore_side_quests',
   STORE_SCHEDULE: 'chore_store_schedule',
   PURCHASED_ACCESSORIES: 'chore_purchased_accessories',
 } as const;
@@ -301,6 +303,46 @@ export class LocalStorageProvider implements DataService {
     this.setItem(KEYS.FAMILY_REWARDS, rewards.filter(r => r.rewardId !== rewardId));
   }
 
+  // Side Quests
+  async getSideQuests(): Promise<SideQuest[]> {
+    return this.getItem<SideQuest[]>(KEYS.SIDE_QUESTS) || [];
+  }
+
+  async getSideQuestsByChild(childId: string): Promise<SideQuest[]> {
+    const quests = await this.getSideQuests();
+    return quests.filter(q => q.childId === childId);
+  }
+
+  async getPendingSideQuests(): Promise<SideQuest[]> {
+    const quests = await this.getSideQuests();
+    return quests.filter(q => q.status === 'pending_verification');
+  }
+
+  async saveSideQuest(quest: SideQuest): Promise<void> {
+    const quests = await this.getSideQuests();
+    const index = quests.findIndex(q => q.questId === quest.questId);
+    if (index >= 0) {
+      quests[index] = quest;
+    } else {
+      quests.push(quest);
+    }
+    this.setItem(KEYS.SIDE_QUESTS, quests);
+  }
+
+  async updateSideQuest(questId: string, updates: Partial<SideQuest>): Promise<void> {
+    const quests = await this.getSideQuests();
+    const index = quests.findIndex(q => q.questId === questId);
+    if (index >= 0) {
+      quests[index] = { ...quests[index], ...updates };
+      this.setItem(KEYS.SIDE_QUESTS, quests);
+    }
+  }
+
+  async deleteSideQuest(questId: string): Promise<void> {
+    const quests = await this.getSideQuests();
+    this.setItem(KEYS.SIDE_QUESTS, quests.filter(q => q.questId !== questId));
+  }
+
   // Store Schedule
   async getStoreSchedule(): Promise<StoreSchedule | null> {
     return this.getItem<StoreSchedule>(KEYS.STORE_SCHEDULE);
@@ -333,6 +375,7 @@ export class LocalStorageProvider implements DataService {
       completions: await this.getCompletions(),
       timePeriods: await this.getTimePeriods(),
       familyRewards: await this.getFamilyRewards(),
+      sideQuests: await this.getSideQuests(),
       storeSchedule: await this.getStoreSchedule(),
       purchasedAccessories: this.getItem<PurchasedAccessory[]>(KEYS.PURCHASED_ACCESSORIES) || [],
       exportedAt: new Date().toISOString(),
@@ -351,6 +394,7 @@ export class LocalStorageProvider implements DataService {
     if (data.completions) this.setItem(KEYS.COMPLETIONS, data.completions);
     if (data.timePeriods) this.setItem(KEYS.TIME_PERIODS, data.timePeriods);
     if (data.familyRewards) this.setItem(KEYS.FAMILY_REWARDS, data.familyRewards);
+    if (data.sideQuests) this.setItem(KEYS.SIDE_QUESTS, data.sideQuests);
     if (data.storeSchedule) this.setItem(KEYS.STORE_SCHEDULE, data.storeSchedule);
     if (data.purchasedAccessories) this.setItem(KEYS.PURCHASED_ACCESSORIES, data.purchasedAccessories);
   }

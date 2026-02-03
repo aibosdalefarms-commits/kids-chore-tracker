@@ -10,10 +10,11 @@ import { ChildrenManager } from '../components/admin/ChildrenManager';
 import { TimePeriodSettings } from '../components/admin/TimePeriodSettings';
 import { FamilyRewards } from '../components/admin/FamilyRewards';
 import { AvatarStoreAdmin } from '../components/admin/AvatarStoreAdmin';
+import { SideQuests } from '../components/admin/SideQuests';
 import { Settings } from '../components/admin/Settings';
 import { dataService } from '../services/data';
 
-type AdminSection = 'dashboard' | 'chores' | 'assignments' | 'children' | 'verification' | 'time-periods' | 'store' | 'rewards' | 'settings';
+type AdminSection = 'dashboard' | 'chores' | 'assignments' | 'children' | 'verification' | 'time-periods' | 'store' | 'rewards' | 'side-quests' | 'settings';
 
 export function Admin() {
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ export function Admin() {
     { id: 'verification' as const, title: 'Verification', icon: '✅', desc: 'Verify completed chores', badge: pendingCount },
     { id: 'chores' as const, title: 'Chore Library', icon: '📋', desc: 'Create and edit chores' },
     { id: 'assignments' as const, title: 'Assignments', icon: '📅', desc: 'Assign chores to children' },
+    { id: 'side-quests' as const, title: 'Side Quests', icon: '🎯', desc: 'One-off tasks for children' },
     { id: 'children' as const, title: 'Children', icon: '👦', desc: 'Manage children and avatars' },
     { id: 'time-periods' as const, title: 'Time Periods', icon: '⏰', desc: 'Configure daily schedules' },
     { id: 'store' as const, title: 'Avatar Store', icon: '🛍️', desc: 'Manage store and prices' },
@@ -58,6 +60,8 @@ export function Admin() {
         return <ChoreLibrary />;
       case 'assignments':
         return <ChoreAssignments />;
+      case 'side-quests':
+        return <SideQuests />;
       case 'verification':
         return <VerificationCenter />;
       case 'children':

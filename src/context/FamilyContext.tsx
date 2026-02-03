@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Family, Child, Chore, ChoreAssignment, TimePeriod, FamilyReward } from '../types';
+import type { Family, Child, Chore, ChoreAssignment, TimePeriod, FamilyReward, SideQuest } from '../types';
 import { dataService } from '../services/data';
 
 interface FamilyContextType {
@@ -12,6 +12,7 @@ interface FamilyContextType {
   assignments: ChoreAssignment[];
   timePeriods: TimePeriod[];
   rewards: FamilyReward[];
+  sideQuests: SideQuest[];
 
   // Actions
   refreshData: () => Promise<void>;
@@ -29,6 +30,9 @@ interface FamilyContextType {
   addReward: (reward: FamilyReward) => Promise<void>;
   updateReward: (rewardId: string, updates: Partial<FamilyReward>) => Promise<void>;
   removeReward: (rewardId: string) => Promise<void>;
+  addSideQuest: (quest: SideQuest) => Promise<void>;
+  updateSideQuest: (questId: string, updates: Partial<SideQuest>) => Promise<void>;
+  removeSideQuest: (questId: string) => Promise<void>;
   initializeFamily: (family: Family, periods: TimePeriod[]) => Promise<void>;
 }
 
@@ -43,10 +47,11 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
   const [assignments, setAssignments] = useState<ChoreAssignment[]>([]);
   const [timePeriods, setTimePeriods] = useState<TimePeriod[]>([]);
   const [rewards, setRewards] = useState<FamilyReward[]>([]);
+  const [sideQuests, setSideQuests] = useState<SideQuest[]>([]);
 
   const refreshData = useCallback(async () => {
     try {
-      const [appState, familyData, childrenData, choresData, assignmentsData, periodsData, rewardsData] = await Promise.all([
+      const [appState, familyData, childrenData, choresData, assignmentsData, periodsData, rewardsData, questsData] = await Promise.all([
         dataService.getAppState(),
         dataService.getFamily(),
         dataService.getChildren(),
@@ -54,6 +59,7 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
         dataService.getAssignments(),
         dataService.getTimePeriods(),
         dataService.getFamilyRewards(),
+        dataService.getSideQuests(),
       ]);
 
       setIsInitialized(appState.initialized);
@@ -63,6 +69,7 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
       setAssignments(assignmentsData);
       setTimePeriods(periodsData);
       setRewards(rewardsData);
+      setSideQuests(questsData);
     } catch (error) {
       console.error('Error loading family data:', error);
     } finally {
@@ -156,6 +163,21 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
     setRewards(prev => prev.filter(r => r.rewardId !== rewardId));
   };
 
+  const addSideQuest = async (quest: SideQuest) => {
+    await dataService.saveSideQuest(quest);
+    setSideQuests(prev => [...prev, quest]);
+  };
+
+  const updateSideQuest = async (questId: string, updates: Partial<SideQuest>) => {
+    await dataService.updateSideQuest(questId, updates);
+    setSideQuests(prev => prev.map(q => q.questId === questId ? { ...q, ...updates } : q));
+  };
+
+  const removeSideQuest = async (questId: string) => {
+    await dataService.deleteSideQuest(questId);
+    setSideQuests(prev => prev.filter(q => q.questId !== questId));
+  };
+
   return (
     <FamilyContext.Provider
       value={{
@@ -167,6 +189,7 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
         assignments,
         timePeriods,
         rewards,
+        sideQuests,
         refreshData,
         updateFamily,
         addChild,
@@ -182,6 +205,9 @@ export function FamilyProvider({ children: childrenNodes }: { children: ReactNod
         addReward,
         updateReward,
         removeReward,
+        addSideQuest,
+        updateSideQuest,
+        removeSideQuest,
         initializeFamily,
       }}
     >
