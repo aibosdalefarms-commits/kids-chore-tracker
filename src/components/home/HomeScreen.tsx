@@ -10,20 +10,11 @@ import { Button } from '../ui/Button';
 
 export function HomeScreen() {
   const navigate = useNavigate();
-  const { children, family, isLoading, rewards } = useFamily();
+  const { children, family, isLoading } = useFamily();
   const { isAuthenticated, authenticate } = useAdmin();
   const [showPinModal, setShowPinModal] = useState(false);
   const [pinError, setPinError] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const nextReward = family
-    ? rewards
-      .filter(reward => !reward.claimed && reward.pointThreshold >= family.familyPoints)
-      .reduce<typeof rewards[number] | null>(
-        (closest, reward) =>
-          !closest || reward.pointThreshold < closest.pointThreshold ? reward : closest,
-        null,
-      )
-    : null;
 
   const handleAdminClick = () => {
     if (isAuthenticated) {
@@ -72,13 +63,6 @@ export function HomeScreen() {
           <div className="inline-flex items-center gap-2 text-lg text-cyan-600 font-medium bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
             <span>👨‍👩‍👧‍👦</span>
             <span>Family Points: {family.familyPoints}</span>
-            {nextReward ? (
-              <span className="text-sm text-cyan-700">
-                Next Reward: {nextReward.description} — Target: {nextReward.pointThreshold} points
-              </span>
-            ) : rewards.length > 0 ? (
-              <span className="text-sm text-cyan-700">All rewards claimed 🎉</span>
-            ) : null}
           </div>
         )}
       </header>
